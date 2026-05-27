@@ -4,6 +4,7 @@ from .models import HeatDetection, Mating, Gestation, Farrowing, PigletBatch, We
 
 class HeatDetectionSerializer(serializers.ModelSerializer):
     sow_name = serializers.CharField(source="sow.ear_tag", read_only=True)
+    intensity_display = serializers.CharField(source="get_intensity_display", read_only=True)
 
     class Meta:
         model = HeatDetection
@@ -21,6 +22,7 @@ class MatingSerializer(serializers.ModelSerializer):
 
 class GestationSerializer(serializers.ModelSerializer):
     sow_name = serializers.CharField(source="sow.ear_tag", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
         model = Gestation

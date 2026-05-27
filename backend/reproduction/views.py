@@ -1,3 +1,4 @@
+from datetime import timedelta
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,6 +23,29 @@ class MatingViewSet(viewsets.ModelViewSet):
     serializer_class = MatingSerializer
     filterset_fields = ["sow", "boar", "mating_type", "is_successful"]
     search_fields = ["sow__ear_tag", "boar__ear_tag", "notes"]
+
+    def _auto_create_gestation(self, mating):
+        if mating.is_successful is False:
+            return
+        existing = Gestation.objects.filter(sow=mating.sow, status__in=["suspected", "confirmed"]).first()
+        if existing:
+            return
+        start = mating.mating_date
+        expected = start + timedelta(days=114)
+        Gestation.objects.create(
+            sow=mating.sow,
+            mating=mating,
+            start_date=start,
+            expected_farrowing_date=expected,
+        )
+
+    def perform_create(self, serializer):
+        mating = serializer.save()
+        self._auto_create_gestation(mating)
+
+    def perform_update(self, serializer):
+        mating = serializer.save()
+        self._auto_create_gestation(mating)
 
 
 class GestationViewSet(viewsets.ModelViewSet):

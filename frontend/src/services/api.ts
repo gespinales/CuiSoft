@@ -76,22 +76,32 @@ export const reproduction = {
   heatDetections: {
     list: (params?: any) => api.get('/reproduction/heat-detections/', { params }),
     create: (data: any) => api.post('/reproduction/heat-detections/', data),
+    update: (id: number, data: any) => api.put(`/reproduction/heat-detections/${id}/`, data),
+    delete: (id: number) => api.delete(`/reproduction/heat-detections/${id}/`),
   },
   matings: {
     list: (params?: any) => api.get('/reproduction/matings/', { params }),
     create: (data: any) => api.post('/reproduction/matings/', data),
+    update: (id: number, data: any) => api.put(`/reproduction/matings/${id}/`, data),
+    delete: (id: number) => api.delete(`/reproduction/matings/${id}/`),
   },
   gestations: {
     list: (params?: any) => api.get('/reproduction/gestations/', { params }),
     create: (data: any) => api.post('/reproduction/gestations/', data),
+    update: (id: number, data: any) => api.put(`/reproduction/gestations/${id}/`, data),
+    delete: (id: number) => api.delete(`/reproduction/gestations/${id}/`),
   },
   farrowings: {
     list: (params?: any) => api.get('/reproduction/farrowings/', { params }),
     create: (data: any) => api.post('/reproduction/farrowings/', data),
+    update: (id: number, data: any) => api.put(`/reproduction/farrowings/${id}/`, data),
+    delete: (id: number) => api.delete(`/reproduction/farrowings/${id}/`),
   },
   weanings: {
     list: (params?: any) => api.get('/reproduction/weanings/', { params }),
     create: (data: any) => api.post('/reproduction/weanings/', data),
+    update: (id: number, data: any) => api.put(`/reproduction/weanings/${id}/`, data),
+    delete: (id: number) => api.delete(`/reproduction/weanings/${id}/`),
   },
   sowSummary: () => api.get('/reproduction/sow-summary/'),
 }
