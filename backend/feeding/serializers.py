@@ -18,7 +18,7 @@ class FeedInventorySerializer(serializers.ModelSerializer):
 
 class FeedConsumptionSerializer(serializers.ModelSerializer):
     feed_type_name = serializers.CharField(source="feed_type.name", read_only=True)
-    pig_name = serializers.CharField(source="pig.ear_tag", read_only=True, allow_null=True)
+    location_name = serializers.CharField(source="location.name", read_only=True, allow_null=True)
 
     class Meta:
         model = FeedConsumption
@@ -27,6 +27,8 @@ class FeedConsumptionSerializer(serializers.ModelSerializer):
 
 class DietSerializer(serializers.ModelSerializer):
     feed_type_name = serializers.CharField(source="feed_type.name", read_only=True)
+    pig_category_display = serializers.CharField(source="get_pig_category_display", read_only=True)
+    sow_status_display = serializers.CharField(source="get_sow_status_display", read_only=True, allow_null=True)
 
     class Meta:
         model = Diet

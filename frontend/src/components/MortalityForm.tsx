@@ -1,9 +1,27 @@
-import { useState } from 'react'
-import { health } from '../services/api'
+import { useState, useEffect } from 'react'
+import { health, pigs } from '../services/api'
 
-export default function MortalityForm({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ pig: '', death_date: '', cause: 'unknown', necropsy_performed: 'false', necropsy_results: '', notes: '' })
+interface Props {
+  record?: any
+  onSave: () => void
+  onCancel: () => void
+}
+
+export default function MortalityForm({ record, onSave, onCancel }: Props) {
+  const [form, setForm] = useState({
+    pig: record?.pig?.toString() || '',
+    death_date: record?.death_date || '',
+    cause: record?.cause || 'unknown',
+    necropsy_performed: record?.necropsy_performed ? 'true' : 'false',
+    necropsy_results: record?.necropsy_results || '',
+    notes: record?.notes || '',
+  })
+  const [pigList, setPigList] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    pigs.list({ status: 'active', page_size: 100 }).then((r) => setPigList(r.data.results || r.data))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,8 +36,11 @@ export default function MortalityForm({ onSave, onCancel }: { onSave: () => void
     <form onSubmit={handleSubmit}>
       <div className="form-row">
         <div className="form-group">
-          <label>ID del Cerdo *</label>
-          <input type="number" value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required />
+          <label>Cerdo *</label>
+          <select value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required>
+            <option value="">Seleccionar...</option>
+            {pigList.map((p: any) => <option key={p.id} value={p.id}>{p.ear_tag} - {p.name || 'Sin nombre'}</option>)}
+          </select>
         </div>
         <div className="form-group">
           <label>Fecha de muerte *</label>

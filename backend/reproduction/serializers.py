@@ -27,6 +27,7 @@ class GestationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gestation
         fields = "__all__"
+        read_only_fields = ["expected_farrowing_date"]
 
 
 class PigletBatchSerializer(serializers.ModelSerializer):

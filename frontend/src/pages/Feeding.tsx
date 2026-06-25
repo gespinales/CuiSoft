@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
 import { feeding } from '../services/api'
 import { Plus, Edit2, Trash2, AlertTriangle } from 'lucide-react'
-import { fmt } from '../utils/format'
+import { fmt, formatDate } from '../utils/format'
 import Modal from '../components/Modal'
 import FeedInventoryForm from '../components/FeedInventoryForm'
 import FeedConsumptionForm from '../components/FeedConsumptionForm'
 import FeedTypeForm from '../components/FeedTypeForm'
+import DietForm from '../components/DietForm'
 
-type Tab = 'stock' | 'inventory' | 'consumption' | 'feedtypes'
+type Tab = 'stock' | 'inventory' | 'consumption' | 'feedtypes' | 'diets'
 
 export default function Feeding() {
   const [tab, setTab] = useState<Tab>('stock')
   const [stock, setStock] = useState<any[]>([])
+  const [projections, setProjections] = useState<any[]>([])
   const [inventory, setInventory] = useState<any[]>([])
   const [consumption, setConsumption] = useState<any[]>([])
   const [types, setTypes] = useState<any[]>([])
+  const [diets, setDiets] = useState<any[]>([])
   const [modal, setModal] = useState(false)
   const [modalType, setModalType] = useState('')
   const [editingRecord, setEditingRecord] = useState<any>(null)
@@ -27,9 +30,11 @@ export default function Feeding() {
     setLoading(true)
     Promise.all([
       feeding.stock().then((r) => setStock(r.data)),
+      feeding.projections().then((r) => setProjections(r.data)),
       feeding.inventory.list().then((r) => setInventory(r.data.results || r.data)),
       feeding.consumption.list().then((r) => setConsumption(r.data.results || r.data)),
       feeding.feedTypes.list().then((r) => setTypes(r.data.results || r.data)),
+      feeding.diets.list().then((r) => setDiets(r.data.results || r.data)),
     ]).finally(() => setLoading(false))
   }
 
@@ -44,6 +49,7 @@ export default function Feeding() {
       if (type === 'inventory') await feeding.inventory.delete(id)
       else if (type === 'consumption') await feeding.consumption.delete(id)
       else if (type === 'feedtype') await feeding.feedTypes.delete(id)
+      else if (type === 'diet') await feeding.diets.delete(id)
     } catch {}
     setDeleteConfirm(null)
     loadData()
@@ -55,6 +61,7 @@ export default function Feeding() {
         case 'inventory': return 'Nuevo ingreso'
         case 'consumption': return 'Registrar consumo'
         case 'feedtype': return 'Nuevo alimento'
+        case 'diet': return 'Nueva dieta'
         default: return 'Nuevo registro'
       }
     }
@@ -67,6 +74,7 @@ export default function Feeding() {
       case 'inventory': return <FeedInventoryForm record={editingRecord} {...commonProps} />
       case 'consumption': return <FeedConsumptionForm record={editingRecord} {...commonProps} />
       case 'feedtype': return <FeedTypeForm record={editingRecord} {...commonProps} />
+      case 'diet': return <DietForm record={editingRecord} {...commonProps} />
       default: return null
     }
   }
@@ -88,6 +96,7 @@ export default function Feeding() {
           {tab === 'inventory' && <button className="btn btn-primary" onClick={() => openCreate('inventory')}><Plus size={18} /> Nuevo ingreso</button>}
           {tab === 'consumption' && <button className="btn btn-primary" onClick={() => openCreate('consumption')}><Plus size={18} /> Registrar consumo</button>}
           {tab === 'feedtypes' && <button className="btn btn-primary" onClick={() => openCreate('feedtype')}><Plus size={18} /> Nuevo alimento</button>}
+          {tab === 'diets' && <button className="btn btn-primary" onClick={() => openCreate('diet')}><Plus size={18} /> Nueva dieta</button>}
         </div>
       </div>
 
@@ -96,33 +105,53 @@ export default function Feeding() {
         <button className={`tab ${tab === 'inventory' ? 'active' : ''}`} onClick={() => setTab('inventory')}>Entradas</button>
         <button className={`tab ${tab === 'consumption' ? 'active' : ''}`} onClick={() => setTab('consumption')}>Consumo</button>
         <button className={`tab ${tab === 'feedtypes' ? 'active' : ''}`} onClick={() => setTab('feedtypes')}>Tipos</button>
+        <button className={`tab ${tab === 'diets' ? 'active' : ''}`} onClick={() => setTab('diets')}>Dietas</button>
       </div>
 
       {tab === 'stock' && (
         <div>
           <div className="cards-grid" style={{ marginBottom: 16 }}>
-            {loading ? <p>Cargando...</p> : stock.map((s: any) => (
-              <div key={s.id} className="card" style={{ borderTopColor: s.available <= 0 ? '#ef4444' : s.available < 100 ? '#f59e0b' : '#10b981' }}>
-                <div className="card-content" style={{ flex: 1 }}>
-                  <p className="card-label">{s.name}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-                    <div>
-                      <small style={{ color: '#64748b' }}>Disponible</small>
-                      <p className="card-value" style={{ color: s.available <= 0 ? '#ef4444' : s.available < 100 ? '#f59e0b' : '#10b981' }}>
-                        {fmt(s.available)}
-                      </p>
+            {loading ? <p>Cargando...</p> : projections.map((p: any) => {
+              const daysLeft = p.days_remaining
+              const borderColor = daysLeft === null ? '#64748b'
+                : daysLeft <= 0 ? '#ef4444'
+                : daysLeft <= 7 ? '#f59e0b'
+                : '#10b981'
+              return (
+                <div key={p.id} className="card" style={{ borderTopColor: borderColor }}>
+                  <div className="card-content">
+                    <p className="card-label">{p.name}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
+                      <div>
+                        <small style={{ color: '#64748b' }}>Disponible</small>
+                        <p className="card-value" style={{ color: borderColor }}>{fmt(p.available_lb)} <small>lb</small></p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <small style={{ color: '#64748b' }}>Consumo diario est.</small>
+                        <p className="card-value">{fmt(p.daily_consumption_estimate_lb)} <small>lb</small></p>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <small style={{ color: '#64748b' }}>Valor: Q{fmt(s.stock_value)}</small>
+                    <div className="stat-row" style={{ marginTop: 8 }}>
+                      <span>
+                        {daysLeft !== null
+                          ? <><strong>{daysLeft}</strong> días restantes</>
+                          : 'Sin dieta asignada'}
+                      </span>
+                      {p.suggested_restock_date && (
+                        <span>Reorden sugerido: <strong>{formatDate(p.suggested_restock_date)}</strong></span>
+                      )}
                     </div>
-                  </div>
-                  <div className="stat-row" style={{ marginTop: 8 }}>
-                    <span>Ingresado: {fmt(s.total_entered)}</span>
-                    <span>Consumido: {fmt(s.total_consumed)}</span>
+                    {p.details && p.details.length > 0 && (
+                      <div style={{ marginTop: 6, fontSize: '0.8rem', color: '#64748b' }}>
+                        {p.details.map((d: any, i: number) => (
+                          <span key={i}>{d.category_display}: {d.pig_count} cerdos × {d.daily_per_pig_lb} lb{i < p.details.length - 1 ? ' | ' : ''}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <div className="table-container">
@@ -131,9 +160,9 @@ export default function Feeding() {
                 <tr>
                   <th>Alimento</th>
                   <th>Proveedor</th>
-                  <th>Ingresado</th>
-                  <th>Consumido</th>
-                  <th>Disponible</th>
+                  <th>Ingresado (qq)</th>
+                  <th>Consumido (lb)</th>
+                  <th>Disponible (lb)</th>
                   <th>Costo Unit.</th>
                   <th>Valor Stock</th>
                 </tr>
@@ -141,17 +170,17 @@ export default function Feeding() {
               <tbody>
                 {loading ? <tr><td colSpan={7} className="text-center">Cargando...</td></tr>
                 : stock.length === 0 ? <tr><td colSpan={7} className="text-center">Sin datos de stock</td></tr>
-                : stock.map((s: any) => (
+                  : stock.map((s: any) => (
                   <tr key={s.id}>
                     <td><strong>{s.name}</strong></td>
                     <td>{s.supplier || '-'}</td>
-                    <td>{fmt(s.total_entered)}</td>
-                    <td>{fmt(s.total_consumed)}</td>
+                    <td>{fmt(s.total_entered_qq)}</td>
+                    <td>{fmt(s.total_consumed_lb)}</td>
                     <td>
-                      <span className={stockColor(s.available)}>
-                        <strong>{fmt(s.available)}</strong>
+                      <span className={stockColor(s.available_lb)}>
+                        <strong>{fmt(s.available_lb)}</strong>
                       </span>
-                      {s.available <= 0 && <AlertTriangle size={14} style={{ marginLeft: 4, color: '#ef4444' }} />}
+                      {s.available_lb <= 0 && <AlertTriangle size={14} style={{ marginLeft: 4, color: '#ef4444' }} />}
                     </td>
                     <td>Q{fmt(s.unit_cost)}</td>
                     <td><strong>Q{fmt(s.stock_value)}</strong></td>
@@ -173,7 +202,7 @@ export default function Feeding() {
                   <tr key={i.id}>
                     <td>{i.feed_type_name}</td>
                     <td><strong>{i.stock_quantity}</strong></td>
-                    <td>{i.entry_date}</td>
+                    <td>{formatDate(i.entry_date)}</td>
                     <td>{i.batch_number || '-'}</td>
                     <td>
                       <div className="action-btns">
@@ -195,15 +224,15 @@ export default function Feeding() {
       {tab === 'consumption' && (
         <div className="table-container">
           <table className="table">
-            <thead><tr><th>Alimento</th><th>Cantidad</th><th>Fecha</th><th>Cerdo</th><th style={{ width: 80 }}>Acciones</th></tr></thead>
+            <thead><tr><th>Alimento</th><th>Cantidad</th><th>Fecha</th><th>Ubicación</th><th style={{ width: 80 }}>Acciones</th></tr></thead>
             <tbody>
               {consumption.length === 0 ? <tr><td colSpan={5} className="text-center">Sin registros</td></tr>
                 : consumption.map((c: any) => (
                   <tr key={c.id}>
                     <td>{c.feed_type_name}</td>
                     <td><strong>{c.quantity}</strong></td>
-                    <td>{c.date}</td>
-                    <td>{c.pig_name || '-'}</td>
+                    <td>{formatDate(c.date)}</td>
+                    <td>{c.location_name || '-'}</td>
                     <td>
                       <div className="action-btns">
                         <button className="btn-icon" title="Editar" onClick={() => openEdit('consumption', c)}>
@@ -238,6 +267,37 @@ export default function Feeding() {
                           <Edit2 size={16} />
                         </button>
                         <button className="btn-icon btn-icon-danger" title="Eliminar" onClick={() => setDeleteConfirm({ id: t.id, type: 'feedtype' })}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'diets' && (
+        <div className="table-container">
+          <table className="table">
+            <thead><tr><th>Nombre</th><th>Alimento</th><th>Categoría</th><th>Estado</th><th>lb/día</th><th>Activa</th><th style={{ width: 80 }}>Acciones</th></tr></thead>
+            <tbody>
+              {diets.length === 0 ? <tr><td colSpan={7} className="text-center">Sin dietas registradas</td></tr>
+                : diets.map((d: any) => (
+                  <tr key={d.id}>
+                    <td><strong>{d.name}</strong></td>
+                    <td>{d.feed_type_name}</td>
+                    <td>{d.pig_category_display}</td>
+                    <td>{d.sow_status_display || '-'}</td>
+                    <td>{d.daily_amount_per_pig}</td>
+                    <td>{d.is_active ? 'Sí' : 'No'}</td>
+                    <td>
+                      <div className="action-btns">
+                        <button className="btn-icon" title="Editar" onClick={() => openEdit('diet', d)}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button className="btn-icon btn-icon-danger" title="Eliminar" onClick={() => setDeleteConfirm({ id: d.id, type: 'diet' })}>
                           <Trash2 size={16} />
                         </button>
                       </div>

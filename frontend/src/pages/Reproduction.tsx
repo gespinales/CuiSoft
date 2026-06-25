@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { reproduction } from '../services/api'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
-import { fmt } from '../utils/format'
+import { fmt, formatDate } from '../utils/format'
 import Modal from '../components/Modal'
 import HeatForm from '../components/HeatForm'
 import MatingForm from '../components/MatingForm'
@@ -145,11 +145,11 @@ export default function Reproduction() {
                   ) : sows.map((sow) => (
                     <tr key={sow.sow_id}>
                       <td><strong>{sow.ear_tag}</strong></td>
-                      <td>{sow.last_mating_date || '-'}</td>
-                      <td>{sow.last_farrowing_date || '-'}</td>
+                      <td>{formatDate(sow.last_mating_date)}</td>
+                      <td>{formatDate(sow.last_farrowing_date)}</td>
                       <td>{sow.piglets_alive}</td>
                       <td>{sow.is_pregnant ? <span className="badge badge-success">Sí</span> : <span className="badge badge-secondary">No</span>}</td>
-                      <td>{sow.expected_farrowing || '-'}</td>
+                      <td>{formatDate(sow.expected_farrowing)}</td>
                       <td>{sow.location || '-'}</td>
                     </tr>
                   ))}
@@ -166,7 +166,7 @@ export default function Reproduction() {
                   {heats.length === 0 ? <tr><td colSpan={6} className="text-center">Sin registros</td></tr>
                     : heats.map((h: any) => (
                       <tr key={h.id}>
-                        <td>{h.sow_name}</td><td>{h.heat_date}</td><td>{h.intensity_display || h.intensity}</td><td>{h.detected_by || '-'}</td><td>{h.is_mated ? 'Sí' : 'No'}</td>
+                        <td>{h.sow_name}</td><td>{formatDate(h.heat_date)}</td><td>{h.intensity_display || h.intensity}</td><td>{h.detected_by || '-'}</td><td>{h.is_mated ? 'Sí' : 'No'}</td>
                         <td>
                           <div className="action-btns">
                             <button className="btn-icon" title="Editar" onClick={() => openEdit('heat', h)}><Edit2 size={16} /></button>
@@ -188,7 +188,7 @@ export default function Reproduction() {
                   {matings.length === 0 ? <tr><td colSpan={7} className="text-center">Sin registros</td></tr>
                     : matings.map((m: any) => (
                       <tr key={m.id}>
-                        <td>{m.sow_name}</td><td>{m.boar_name || '-'}</td><td>{m.mating_date}</td><td>{m.mating_type === 'natural' ? 'Natural' : 'IA'}</td><td>{m.technician || '-'}</td><td>{m.is_successful === null ? '-' : m.is_successful ? 'Sí' : 'No'}</td>
+                        <td>{m.sow_name}</td><td>{m.boar_name || '-'}</td><td>{formatDate(m.mating_date)}</td><td>{m.mating_type === 'natural' ? 'Natural' : 'IA'}</td><td>{m.technician || '-'}</td><td>{m.is_successful === null ? '-' : m.is_successful ? 'Sí' : 'No'}</td>
                         <td>
                           <div className="action-btns">
                             <button className="btn-icon" title="Editar" onClick={() => openEdit('mating', m)}><Edit2 size={16} /></button>
@@ -210,7 +210,7 @@ export default function Reproduction() {
                   {gestations.length === 0 ? <tr><td colSpan={6} className="text-center">Sin registros</td></tr>
                     : gestations.map((g: any) => (
                       <tr key={g.id}>
-                        <td>{g.sow_name}</td><td>{g.start_date}</td><td>{g.expected_farrowing_date}</td><td>{g.status_display || g.status}</td><td>{g.confirmed_date || '-'}</td>
+                        <td>{g.sow_name}</td><td>{formatDate(g.start_date)}</td><td>{formatDate(g.expected_farrowing_date)}</td><td>{g.status_display || g.status}</td><td>{formatDate(g.confirmed_date)}</td>
                         <td>
                           <div className="action-btns">
                             <button className="btn-icon" title="Editar" onClick={() => openEdit('gestation', g)}><Edit2 size={16} /></button>
@@ -232,7 +232,7 @@ export default function Reproduction() {
                   {farrowings.length === 0 ? <tr><td colSpan={8} className="text-center">Sin registros</td></tr>
                     : farrowings.map((f: any) => (
                       <tr key={f.id}>
-                        <td>{f.sow_name}</td><td>{f.farrowing_date}</td><td><strong>{f.piglets_alive}</strong></td><td>{f.piglets_stillborn}</td><td>{f.piglets_mummies}</td><td>{f.piglets_total}</td><td>{f.assisted ? 'Sí' : 'No'}</td>
+                        <td>{f.sow_name}</td><td>{formatDate(f.farrowing_date)}</td><td><strong>{f.piglets_alive}</strong></td><td>{f.piglets_stillborn}</td><td>{f.piglets_mummies}</td><td>{f.piglets_total}</td><td>{f.assisted ? 'Sí' : 'No'}</td>
                         <td>
                           <div className="action-btns">
                             <button className="btn-icon" title="Editar" onClick={() => openEdit('farrowing', f)}><Edit2 size={16} /></button>
@@ -254,7 +254,7 @@ export default function Reproduction() {
                   {weanings.length === 0 ? <tr><td colSpan={6} className="text-center">Sin registros</td></tr>
                     : weanings.map((w: any) => (
                       <tr key={w.id}>
-                        <td>{w.sow_name}</td><td>{w.weaning_date}</td><td><strong>{w.piglets_weaned}</strong></td><td>{w.avg_weight_kg ? `${fmt(w.avg_weight_kg)} kg` : '-'}</td><td>{w.age_days}</td>
+                        <td>{w.sow_name}</td><td>{formatDate(w.weaning_date)}</td><td><strong>{w.piglets_weaned}</strong></td><td>{w.avg_weight_kg ? `${fmt(w.avg_weight_kg)} kg` : '-'}</td><td>{w.age_days}</td>
                         <td>
                           <div className="action-btns">
                             <button className="btn-icon" title="Editar" onClick={() => openEdit('weaning', w)}><Edit2 size={16} /></button>

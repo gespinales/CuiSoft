@@ -22,6 +22,12 @@ class PigCategory(models.TextChoices):
     REPLACEMENT = "replacement", "Reemplazo"
 
 
+class SowStatus(models.TextChoices):
+    EMPTY = "empty", "Vacía"
+    GESTATING = "gestating", "Gestante"
+    LACTATING = "lactating", "Lactante"
+
+
 class Breed(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Raza")
     description = models.TextField(blank=True, verbose_name="Descripción")
@@ -55,6 +61,7 @@ class Pig(models.Model):
     birth_date = models.DateField(null=True, blank=True, verbose_name="Fecha de nacimiento")
     sex = models.CharField(max_length=10, choices=Sex.choices, verbose_name="Sexo")
     category = models.CharField(max_length=20, choices=PigCategory.choices, default=PigCategory.SOW, verbose_name="Categoría")
+    sow_status = models.CharField(max_length=20, choices=SowStatus.choices, null=True, blank=True, verbose_name="Estado reproductivo")
     status = models.CharField(max_length=20, choices=PigStatus.choices, default=PigStatus.ACTIVE, verbose_name="Estado")
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Ubicación")
     mother = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="offspring_mother", verbose_name="Madre")

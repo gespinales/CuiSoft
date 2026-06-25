@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from animals.models import Pig
@@ -56,10 +57,12 @@ class GestationStatus(models.TextChoices):
 
 
 class Gestation(models.Model):
+    GESTATION_DAYS = 114
+
     sow = models.ForeignKey(Pig, on_delete=models.CASCADE, related_name="gestations", verbose_name="Cerda", limit_choices_to={"sex": "female"})
     mating = models.ForeignKey(Mating, on_delete=models.SET_NULL, null=True, blank=True, related_name="gestations", verbose_name="Monta")
     start_date = models.DateField(verbose_name="Fecha de inicio")
-    expected_farrowing_date = models.DateField(verbose_name="Fecha probable de parto")
+    expected_farrowing_date = models.DateField(editable=False, verbose_name="Fecha probable de parto")
     status = models.CharField(max_length=20, choices=GestationStatus.choices, default=GestationStatus.SUSPECTED, verbose_name="Estado")
     confirmed_date = models.DateField(null=True, blank=True, verbose_name="Fecha de confirmación")
     ultrasound_result = models.BooleanField(null=True, verbose_name="Resultado de ecografía")
@@ -70,6 +73,11 @@ class Gestation(models.Model):
         verbose_name = "Gestación"
         verbose_name_plural = "Gestiones"
         ordering = ["-start_date"]
+
+    def save(self, *args, **kwargs):
+        if self.start_date:
+            self.expected_farrowing_date = self.start_date + timedelta(days=self.GESTATION_DAYS)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.sow.ear_tag} - Gestación {self.start_date}"

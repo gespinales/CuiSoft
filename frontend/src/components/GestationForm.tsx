@@ -11,7 +11,6 @@ export default function GestationForm({ record, onSave, onCancel }: GestationFor
   const [form, setForm] = useState({
     sow: record?.sow?.toString() || '',
     start_date: record?.start_date || '',
-    expected_farrowing_date: record?.expected_farrowing_date || '',
     status: record?.status || 'suspected',
     confirmed_date: record?.confirmed_date || '',
     ultrasound_result: record?.ultrasound_result ?? '',
@@ -22,20 +21,14 @@ export default function GestationForm({ record, onSave, onCancel }: GestationFor
   const [error, setError] = useState('')
   const editing = !!record
 
+  const expectedFarrowingDate = form.start_date
+    ? new Date(new Date(form.start_date).getTime() + 114 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    : ''
+
   useEffect(() => {
     pigs.list({ sex: 'female', category: 'sow', status: 'active', page_size: 100 })
       .then((r) => setSows(r.data.results || r.data))
   }, [])
-
-  const handleStartDateChange = (value: string) => {
-    const newForm = { ...form, start_date: value }
-    if (value && !editing) {
-      const d = new Date(value)
-      d.setDate(d.getDate() + 114)
-      newForm.expected_farrowing_date = d.toISOString().split('T')[0]
-    }
-    setForm(newForm)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +38,6 @@ export default function GestationForm({ record, onSave, onCancel }: GestationFor
       const payload = {
         sow: Number(form.sow),
         start_date: form.start_date,
-        expected_farrowing_date: form.expected_farrowing_date || null,
         status: form.status,
         confirmed_date: form.confirmed_date || null,
         ultrasound_result: form.ultrasound_result === '' ? null : form.ultrasound_result === 'true',
@@ -92,11 +84,12 @@ export default function GestationForm({ record, onSave, onCancel }: GestationFor
       <div className="form-row">
         <div className="form-group">
           <label>Fecha de inicio *</label>
-          <input type="date" value={form.start_date} onChange={(e) => handleStartDateChange(e.target.value)} required />
+          <input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
         </div>
         <div className="form-group">
           <label>Fecha probable de parto</label>
-          <input type="date" value={form.expected_farrowing_date} onChange={(e) => setForm({ ...form, expected_farrowing_date: e.target.value })} />
+          <input type="date" value={expectedFarrowingDate} disabled />
+          <small className="text-muted">Calculado automáticamente (114 días de gestación)</small>
         </div>
       </div>
       <div className="form-row">

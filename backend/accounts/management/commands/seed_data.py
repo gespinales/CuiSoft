@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from animals.models import Breed, Location, Pig
+from animals.models import Breed, Location, Pig, SowStatus
 from health.models import Vaccine
 from feeding.models import FeedType
 from sales.models import Customer
@@ -99,13 +99,21 @@ class Command(BaseCommand):
             {"ear_tag": "CM-008", "breed": land, "birth_date": date(2022, 11, 8), "location": gest1, "notes": "Problemas de patas en último parto"},
         ]
         sows = []
-        for s in sows_data:
+        for i, s in enumerate(sows_data):
             pig, created = Pig.objects.get_or_create(ear_tag=s["ear_tag"], defaults={
                 "sex": "female", "category": "sow", "status": "active",
+                "sow_status": "empty",
                 "breed": s["breed"], "birth_date": s["birth_date"],
                 "location": s["location"], "notes": s.get("notes", ""),
             })
             sows.append(pig)
+        # Asignar estado reproductivo a las primeras cerdas de ejemplo
+        if sows:
+            sows[0].sow_status = "gestating"
+            sows[0].save(update_fields=["sow_status"])
+        if len(sows) > 1:
+            sows[1].sow_status = "lactating"
+            sows[1].save(update_fields=["sow_status"])
 
         # Verracos
         boars_data = [
@@ -144,23 +152,55 @@ class Command(BaseCommand):
                     location=eng1,
                 )
 
-        # Alimentación - inventario
-        from feeding.models import FeedInventory, FeedConsumption
+        # Dietas por categoría (cantidades en libras/cerdo/día)
+        from feeding.models import FeedInventory, FeedConsumption, Diet
+        dietas_data = [
+            {"name": "Gestación", "feed_type": FeedType.objects.get(name="Gestación"), "pig_category": "sow", "sow_status": "gestating", "daily_amount_per_pig": 5.5},
+            {"name": "Lactancia", "feed_type": FeedType.objects.get(name="Lactancia"), "pig_category": "sow", "sow_status": "lactating", "daily_amount_per_pig": 11.0},
+            {"name": "Padrillo", "feed_type": FeedType.objects.get(name="Gestación"), "pig_category": "boar", "sow_status": None, "daily_amount_per_pig": 5.5},
+            {"name": "Iniciador Lechones", "feed_type": FeedType.objects.get(name="Iniciador (0-21 días)"), "pig_category": "piglet", "sow_status": None, "daily_amount_per_pig": 0.7},
+            {"name": "Preiniciador", "feed_type": FeedType.objects.get(name="Preiniciador (21-42 días)"), "pig_category": "piglet", "sow_status": None, "daily_amount_per_pig": 1.1},
+            {"name": "Engorde", "feed_type": FeedType.objects.get(name="Engorde Final"), "pig_category": "grower", "sow_status": None, "daily_amount_per_pig": 6.6},
+            {"name": "Reemplazo", "feed_type": FeedType.objects.get(name="Crecimiento (42-70 días)"), "pig_category": "replacement", "sow_status": None, "daily_amount_per_pig": 4.4},
+        ]
+        # Limpiar dietas viejas de cerdas sin sow_status (cambio de esquema)
+        Diet.objects.filter(pig_category="sow", sow_status__isnull=True).delete()
+        for d in dietas_data:
+            Diet.objects.update_or_create(
+                feed_type=d["feed_type"], pig_category=d["pig_category"],
+                sow_status=d.get("sow_status"),
+                defaults=d,
+            )
+
+        # Alimentación - inventario (cantidades en quintales)
         today = date.today()
         for ft in FeedType.objects.all():
             if not FeedInventory.objects.filter(feed_type=ft).exists():
                 FeedInventory.objects.create(
                     feed_type=ft,
-                    stock_quantity=500,
+                    stock_quantity=50,
                     entry_date=today - timedelta(days=30),
                 )
 
+        # Alimentación - consumo (cantidades en libras)
         if not FeedConsumption.objects.exists():
             for ft in FeedType.objects.all()[:3]:
                 FeedConsumption.objects.create(
                     feed_type=ft,
-                    quantity=120,
+                    quantity=250,
                     date=today - timedelta(days=1),
                 )
+
+        # Pagos a trabajadores
+        from finances.models import WorkerPayment
+        if not WorkerPayment.objects.exists():
+            WorkerPayment.objects.create(
+                worker_name="Carlos López",
+                amount=350,
+                payment_date=today - timedelta(days=2),
+                frequency="weekly",
+                period_start=today - timedelta(days=9),
+                period_end=today - timedelta(days=2),
+            )
 
         self.stdout.write(self.style.SUCCESS(f"Datos de prueba creados: {Pig.objects.count()} cerdos, {Breed.objects.count()} razas, {Location.objects.count()} ubicaciones"))

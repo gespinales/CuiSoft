@@ -19,9 +19,11 @@ interface DashboardData {
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
+  const [finSummary, setFinSummary] = useState<any>(null)
 
   useEffect(() => {
     reports.dashboard().then((res) => setData(res.data))
+    reports.financialSummary().then((res) => setFinSummary(res.data))
   }, [])
 
   if (!data) return <div className="loading">Cargando dashboard...</div>
@@ -86,6 +88,24 @@ export default function Dashboard() {
               <span>Valor inventario alimento</span>
               <strong>Q{fmt(data.feed_stock_value)}</strong>
             </div>
+            {finSummary && (
+              <>
+                <div className="stat-row">
+                  <span>Ingresos (mes)</span>
+                  <strong className="text-success">Q{fmt(finSummary.month_income)}</strong>
+                </div>
+                <div className="stat-row">
+                  <span>Costos (mes)</span>
+                  <strong className="text-danger">Q{fmt(finSummary.month_costs)}</strong>
+                </div>
+                <div className="stat-row">
+                  <span>Ganancia Neta (mes)</span>
+                  <strong className={finSummary.month_net >= 0 ? 'text-success' : 'text-danger'}>
+                    Q{fmt(finSummary.month_net)}
+                  </strong>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

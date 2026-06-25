@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from animals.models import Pig
+from animals.models import PigCategory, SowStatus
 
 
 class FeedType(models.Model):
@@ -39,7 +39,6 @@ class FeedInventory(models.Model):
 
 
 class FeedConsumption(models.Model):
-    pig = models.ForeignKey(Pig, on_delete=models.CASCADE, related_name="feed_consumptions", verbose_name="Cerdo", null=True, blank=True)
     feed_type = models.ForeignKey(FeedType, on_delete=models.CASCADE, verbose_name="Alimento")
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Cantidad")
     date = models.DateField(verbose_name="Fecha")
@@ -60,6 +59,8 @@ class Diet(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nombre de dieta")
     description = models.TextField(blank=True, verbose_name="Descripción")
     feed_type = models.ForeignKey(FeedType, on_delete=models.CASCADE, verbose_name="Alimento")
+    pig_category = models.CharField(max_length=20, choices=PigCategory.choices, verbose_name="Categoría de cerdo")
+    sow_status = models.CharField(max_length=20, choices=SowStatus.choices, null=True, blank=True, verbose_name="Estado reproductivo (solo cerdas)")
     daily_amount_per_pig = models.DecimalField(max_digits=7, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Cantidad diaria por cerdo")
     min_age_days = models.PositiveIntegerField(default=0, verbose_name="Edad mínima (días)")
     max_age_days = models.PositiveIntegerField(null=True, blank=True, verbose_name="Edad máxima (días)")
@@ -68,6 +69,10 @@ class Diet(models.Model):
     class Meta:
         verbose_name = "Dieta"
         verbose_name_plural = "Dietas"
+        unique_together = ["feed_type", "pig_category", "sow_status"]
 
     def __str__(self):
-        return f"{self.name} - {self.daily_amount_per_pig} {self.feed_type.unit_measure}"
+        label = self.get_pig_category_display()
+        if self.sow_status:
+            label += f" ({self.get_sow_status_display()})"
+        return f"{self.name} - {label} ({self.daily_amount_per_pig} {self.feed_type.unit_measure}/día)"

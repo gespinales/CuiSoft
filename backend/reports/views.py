@@ -10,6 +10,7 @@ from reproduction.models import Farrowing, Weaning
 from health.models import MortalityRecord, VaccinationRecord
 from feeding.models import FeedInventory, FeedType, FeedConsumption
 from sales.models import Sale
+from finances.models import WorkerPayment, Expense
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -106,3 +107,58 @@ class DashboardViewSet(viewsets.ViewSet):
                 "feed_consumption": float(sum(c.quantity for c in feed_consumption)),
             })
         return Response(monthly_data)
+
+    @action(detail=False, methods=["get"])
+    def financial_summary(self, request):
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+
+        # Ingresos
+        total_income = Sale.objects.filter(status="completed").aggregate(
+            total=Coalesce(Sum("total_amount"), 0, output_field=DecimalField())
+        )["total"]
+        month_income = Sale.objects.filter(status="completed", sale_date__gte=month_start).aggregate(
+            total=Coalesce(Sum("total_amount"), 0, output_field=DecimalField())
+        )["total"]
+
+        # Gastos en alimento (costo del consumo * costo unitario)
+        feed_cost = FeedConsumption.objects.aggregate(
+            total=Coalesce(Sum(F("quantity") * F("feed_type__unit_cost") / 100), 0, output_field=DecimalField())
+        )["total"]
+        month_feed_cost = FeedConsumption.objects.filter(date__gte=month_start).aggregate(
+            total=Coalesce(Sum(F("quantity") * F("feed_type__unit_cost") / 100), 0, output_field=DecimalField())
+        )["total"]
+
+        # Pagos a trabajadores
+        total_worker = WorkerPayment.objects.aggregate(
+            total=Coalesce(Sum("amount"), 0, output_field=DecimalField())
+        )["total"]
+        month_worker = WorkerPayment.objects.filter(payment_date__gte=month_start).aggregate(
+            total=Coalesce(Sum("amount"), 0, output_field=DecimalField())
+        )["total"]
+
+        # Otros gastos
+        total_expenses = Expense.objects.aggregate(
+            total=Coalesce(Sum("amount"), 0, output_field=DecimalField())
+        )["total"]
+        month_expenses = Expense.objects.filter(date__gte=month_start).aggregate(
+            total=Coalesce(Sum("amount"), 0, output_field=DecimalField())
+        )["total"]
+
+        total_costs = float(feed_cost) + float(total_worker) + float(total_expenses)
+        month_costs = float(month_feed_cost) + float(month_worker) + float(month_expenses)
+
+        return Response({
+            "total_income": float(total_income),
+            "month_income": float(month_income),
+            "total_feed_cost": float(feed_cost),
+            "month_feed_cost": float(month_feed_cost),
+            "total_worker_payments": float(total_worker),
+            "month_worker_payments": float(month_worker),
+            "total_other_expenses": float(total_expenses),
+            "month_other_expenses": float(month_expenses),
+            "total_costs": round(total_costs, 2),
+            "month_costs": round(month_costs, 2),
+            "total_net": round(float(total_income) - total_costs, 2),
+            "month_net": round(float(month_income) - month_costs, 2),
+        })

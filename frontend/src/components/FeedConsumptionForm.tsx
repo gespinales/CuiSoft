@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { feeding } from '../services/api'
+import { feeding, locations as locApi } from '../services/api'
 
 interface FeedConsumptionFormProps {
   record?: any
@@ -10,17 +10,20 @@ interface FeedConsumptionFormProps {
 export default function FeedConsumptionForm({ record, onSave, onCancel }: FeedConsumptionFormProps) {
   const [form, setForm] = useState({
     feed_type: record?.feed_type?.toString() || '',
-    pig: record?.pig?.toString() || '',
     quantity: record?.quantity?.toString() || '0',
     date: record?.date || '',
     location: record?.location?.toString() || '',
     notes: record?.notes || '',
   })
   const [types, setTypes] = useState<any[]>([])
+  const [locations, setLocations] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const editing = !!record
 
-  useEffect(() => { feeding.feedTypes.list().then((r) => setTypes(r.data.results || r.data)) }, [])
+  useEffect(() => {
+    feeding.feedTypes.list().then((r) => setTypes(r.data.results || r.data))
+    locApi.list().then((r) => setLocations(r.data.results || r.data))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,7 +31,6 @@ export default function FeedConsumptionForm({ record, onSave, onCancel }: FeedCo
     try {
       const payload = {
         feed_type: Number(form.feed_type),
-        pig: form.pig ? Number(form.pig) : null,
         quantity: Number(form.quantity),
         date: form.date,
         location: form.location ? Number(form.location) : null,
@@ -64,8 +66,11 @@ export default function FeedConsumptionForm({ record, onSave, onCancel }: FeedCo
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
         </div>
         <div className="form-group">
-          <label>ID del Cerdo</label>
-          <input type="number" value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} placeholder="Opcional" />
+          <label>Ubicación</label>
+          <select value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}>
+            <option value="">Seleccionar...</option>
+            {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name} ({l.code})</option>)}
+          </select>
         </div>
       </div>
       <div className="form-actions">

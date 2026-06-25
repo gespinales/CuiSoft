@@ -553,6 +553,10 @@ body {
 
 .text-center { text-align: center; }
 .text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.positive { color: var(--success); font-weight: 700; }
+.negative { color: var(--danger); font-weight: 700; }
+.stat-value { font-size: 1.5rem; margin: 4px 0; }
 .text-warning { color: var(--warning); }
 
 /* Modal */

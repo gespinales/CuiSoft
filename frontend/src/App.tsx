@@ -8,6 +8,7 @@ import Reproduction from './pages/Reproduction'
 import Health from './pages/Health'
 import Feeding from './pages/Feeding'
 import Sales from './pages/Sales'
+import Finances from './pages/Finances'
 import Users from './pages/Users'
 import './App.css'
 
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/health" element={<Health />} />
             <Route path="/feeding" element={<Feeding />} />
             <Route path="/sales" element={<Sales />} />
+            <Route path="/finances" element={<Finances />} />
             <Route path="/users" element={<Users />} />
           </Route>
         </Routes>

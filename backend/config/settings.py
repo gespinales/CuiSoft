@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "health",
     "feeding",
     "sales",
+    "finances",
     "reports",
 ]
 

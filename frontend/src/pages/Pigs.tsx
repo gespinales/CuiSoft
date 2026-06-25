@@ -11,6 +11,7 @@ interface Pig {
   breed_name: string
   sex: string
   category: string
+  sow_status: string | null
   status: string
   location_name: string
   birth_date: string
@@ -86,13 +87,19 @@ export default function Pigs() {
 
   const sexLabel = (s: string) => s === 'male' ? 'Macho' : 'Hembra'
 
-  const categoryLabel: Record<string, string> = {
-    sow: 'Cerda Madre',
-    boar: 'Verraco',
-    piglet: 'Lechón',
-    grower: 'Engorde',
-    replacement: 'Reemplazo',
-  }
+const categoryLabel: Record<string, string> = {
+  sow: 'Cerda Madre',
+  boar: 'Verraco',
+  piglet: 'Lechón',
+  grower: 'Engorde',
+  replacement: 'Reemplazo',
+}
+
+const sowStatusLabel: Record<string, string> = {
+  empty: 'Vacía',
+  gestating: 'Gestante',
+  lactating: 'Lactante',
+}
 
   return (
     <div className="page">
@@ -149,6 +156,7 @@ export default function Pigs() {
               <th>Arete</th>
               <th>Nombre</th>
               <th>Categoría</th>
+              <th>Estado Reprod.</th>
               <th>Sexo</th>
               <th>Raza</th>
               <th>Edad</th>
@@ -159,9 +167,9 @@ export default function Pigs() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="text-center">Cargando...</td></tr>
+              <tr><td colSpan={10} className="text-center">Cargando...</td></tr>
             ) : pigList.length === 0 ? (
-              <tr><td colSpan={9} className="text-center">
+              <tr><td colSpan={10} className="text-center">
                 <div className="empty-table">
                   <p>No hay animales registrados</p>
                   <button className="btn btn-primary" onClick={openCreate}>Crear primer cerdo</button>
@@ -172,6 +180,7 @@ export default function Pigs() {
                 <td><strong>{pig.ear_tag}</strong></td>
                 <td>{pig.name || '-'}</td>
                 <td>{categoryLabel[pig.category] || pig.category}</td>
+                <td>{pig.sow_status ? sowStatusLabel[pig.sow_status] || pig.sow_status : '-'}</td>
                 <td>{sexLabel(pig.sex)}</td>
                 <td>{pig.breed_name || '-'}</td>
                 <td>{pig.age_days} días</td>

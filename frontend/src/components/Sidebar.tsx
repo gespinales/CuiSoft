@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, PiggyBank, Heart, Syringe, Wheat, DollarSign, Users, LogOut, ChevronLeft, ChevronRight,
+  LayoutDashboard, PiggyBank, Heart, Syringe, Wheat, DollarSign, Wallet, Users, LogOut, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/health', icon: Syringe, label: 'Salud' },
   { to: '/feeding', icon: Wheat, label: 'Alimentación' },
   { to: '/sales', icon: DollarSign, label: 'Ventas' },
+  { to: '/finances', icon: Wallet, label: 'Finanzas' },
   { to: '/users', icon: Users, label: 'Usuarios', adminOnly: true },
 ]
 

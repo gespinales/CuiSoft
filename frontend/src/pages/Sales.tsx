@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { sales } from '../services/api'
 import { Plus } from 'lucide-react'
-import { fmt } from '../utils/format'
+import { fmt, formatDate } from '../utils/format'
 import Modal from '../components/Modal'
 import CustomerForm from '../components/CustomerForm'
 import SaleForm from '../components/SaleForm'
@@ -74,7 +74,7 @@ export default function SalesPage() {
               {salesList.length === 0 ? <tr><td colSpan={6} className="text-center">No hay ventas registradas</td></tr>
                 : salesList.map((s: any) => (
                   <tr key={s.id}>
-                    <td>#{s.id}</td><td>{s.customer_name}</td><td>{s.sale_date}</td>
+                    <td>#{s.id}</td><td>{s.customer_name}</td><td>{formatDate(s.sale_date)}</td>
                     <td><strong>Q{fmt(s.total_amount)}</strong></td>
                     <td><span className={`badge ${s.status === 'completed' ? 'badge-success' : s.status === 'cancelled' ? 'badge-danger' : 'badge-warning'}`}>{s.status}</span></td>
                     <td>{s.payment_method || '-'}</td>
@@ -93,7 +93,7 @@ export default function SalesPage() {
               {batches.length === 0 ? <tr><td colSpan={6} className="text-center">No hay lotes de engorde</td></tr>
                 : batches.map((b: any) => (
                   <tr key={b.id}>
-                    <td><strong>{b.name}</strong></td><td>{b.pigs_count}</td><td>{b.start_date}</td>
+                    <td><strong>{b.name}</strong></td><td>{b.pigs_count}</td><td>{formatDate(b.start_date)}</td>
                     <td>{b.avg_start_weight ? `${fmt(b.avg_start_weight)} kg` : '-'}</td>
                     <td>{b.target_weight ? `${fmt(b.target_weight)} kg` : '-'}</td>
                     <td>{b.status}</td>

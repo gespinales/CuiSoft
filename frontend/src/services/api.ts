@@ -145,6 +145,13 @@ export const feeding = {
     delete: (id: number) => api.delete(`/feeding/consumption/${id}/`),
   },
   stock: () => api.get('/feeding/stock/'),
+  projections: () => api.get('/feeding/stock/projections/'),
+  diets: {
+    list: () => api.get('/feeding/diets/'),
+    create: (data: any) => api.post('/feeding/diets/', data),
+    update: (id: number, data: any) => api.put(`/feeding/diets/${id}/`, data),
+    delete: (id: number) => api.delete(`/feeding/diets/${id}/`),
+  },
 }
 
 export const sales = {
@@ -162,11 +169,27 @@ export const sales = {
   },
 }
 
+export const finances = {
+  workerPayments: {
+    list: () => api.get('/finances/worker-payments/'),
+    create: (data: any) => api.post('/finances/worker-payments/', data),
+    update: (id: number, data: any) => api.put(`/finances/worker-payments/${id}/`, data),
+    delete: (id: number) => api.delete(`/finances/worker-payments/${id}/`),
+  },
+  expenses: {
+    list: () => api.get('/finances/expenses/'),
+    create: (data: any) => api.post('/finances/expenses/', data),
+    update: (id: number, data: any) => api.put(`/finances/expenses/${id}/`, data),
+    delete: (id: number) => api.delete(`/finances/expenses/${id}/`),
+  },
+}
+
 export const reports = {
   dashboard: () => api.get('/reports/dashboard/'),
   sowProductivity: () => api.get('/reports/dashboard/sow_productivity/'),
   monthlyStats: (year?: number) =>
     api.get('/reports/dashboard/monthly_stats/', { params: { year } }),
+  financialSummary: () => api.get('/reports/dashboard/financial_summary/'),
 }
 
 export default api

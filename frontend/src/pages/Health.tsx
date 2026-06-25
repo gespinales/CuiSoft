@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { health } from '../services/api'
 import { Plus } from 'lucide-react'
-import { fmt } from '../utils/format'
+import { fmt, formatDate } from '../utils/format'
 import Modal from '../components/Modal'
 import VaccinationForm from '../components/VaccinationForm'
 import TreatmentForm from '../components/TreatmentForm'
@@ -80,9 +80,9 @@ export default function Health() {
                 <tr><td colSpan={6} className="text-center">Sin registros de vacunación</td></tr>
               ) : vaccinations.map((v: any) => (
                 <tr key={v.id}>
-                  <td>{v.pig_name}</td><td>{v.vaccine_name}</td><td>{v.application_date}</td>
+                  <td>{v.pig_name}</td><td>{v.vaccine_name}</td><td>{formatDate(v.application_date)}</td>
                   <td>{v.dose_ml ? `${fmt(v.dose_ml)} ml` : '-'}</td><td>{v.applied_by || '-'}</td>
-                  <td>{v.next_due_date || '-'}</td>
+                  <td>{formatDate(v.next_due_date)}</td>
                 </tr>
               ))}
             </tbody>
@@ -102,7 +102,7 @@ export default function Health() {
               ) : treatments.map((t: any) => (
                 <tr key={t.id}>
                   <td>{t.pig_name}</td><td>{t.treatment_type}</td><td>{t.medication}</td>
-                  <td>{t.start_date}</td><td>{t.end_date || '-'}</td><td>{t.diagnosis || '-'}</td>
+                  <td>{formatDate(t.start_date)}</td><td>{formatDate(t.end_date)}</td><td>{t.diagnosis || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,7 +121,7 @@ export default function Health() {
                 <tr><td colSpan={5} className="text-center">Sin registros de mortalidad</td></tr>
               ) : mortalities.map((m: any) => (
                 <tr key={m.id}>
-                  <td>{m.pig_name}</td><td>{m.death_date}</td><td>{m.cause}</td>
+                  <td>{m.pig_name}</td><td>{formatDate(m.death_date)}</td><td>{m.cause}</td>
                   <td>{m.age_days} días</td><td>{m.necropsy_performed ? 'Sí' : 'No'}</td>
                 </tr>
               ))}

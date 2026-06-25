@@ -30,13 +30,10 @@ class MatingViewSet(viewsets.ModelViewSet):
         existing = Gestation.objects.filter(sow=mating.sow, status__in=["suspected", "confirmed"]).first()
         if existing:
             return
-        start = mating.mating_date
-        expected = start + timedelta(days=114)
         Gestation.objects.create(
             sow=mating.sow,
             mating=mating,
-            start_date=start,
-            expected_farrowing_date=expected,
+            start_date=mating.mating_date,
         )
 
     def perform_create(self, serializer):

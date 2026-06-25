@@ -1,9 +1,30 @@
-import { useState } from 'react'
-import { health } from '../services/api'
+import { useState, useEffect } from 'react'
+import { health, pigs } from '../services/api'
 
-export default function TreatmentForm({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ pig: '', treatment_type: 'antibiotic', medication: '', start_date: '', end_date: '', dosage: '', applied_by: '', diagnosis: '', notes: '' })
+interface Props {
+  record?: any
+  onSave: () => void
+  onCancel: () => void
+}
+
+export default function TreatmentForm({ record, onSave, onCancel }: Props) {
+  const [form, setForm] = useState({
+    pig: record?.pig?.toString() || '',
+    treatment_type: record?.treatment_type || 'antibiotic',
+    medication: record?.medication || '',
+    start_date: record?.start_date || '',
+    end_date: record?.end_date || '',
+    dosage: record?.dosage || '',
+    applied_by: record?.applied_by || '',
+    diagnosis: record?.diagnosis || '',
+    notes: record?.notes || '',
+  })
+  const [pigList, setPigList] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    pigs.list({ status: 'active', page_size: 100 }).then((r) => setPigList(r.data.results || r.data))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,8 +43,11 @@ export default function TreatmentForm({ onSave, onCancel }: { onSave: () => void
     <form onSubmit={handleSubmit}>
       <div className="form-row">
         <div className="form-group">
-          <label>ID del Cerdo *</label>
-          <input type="number" value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required />
+          <label>Cerdo *</label>
+          <select value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required>
+            <option value="">Seleccionar...</option>
+            {pigList.map((p: any) => <option key={p.id} value={p.id}>{p.ear_tag} - {p.name || 'Sin nombre'}</option>)}
+          </select>
         </div>
         <div className="form-group">
           <label>Tipo *</label>

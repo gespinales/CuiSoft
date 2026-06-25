@@ -1,12 +1,30 @@
 import { useState, useEffect } from 'react'
-import { health } from '../services/api'
+import { health, pigs } from '../services/api'
 
-export default function VaccinationForm({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ pig: '', vaccine: '', application_date: '', dose_ml: '', applied_by: '', next_due_date: '', notes: '' })
+interface Props {
+  record?: any
+  onSave: () => void
+  onCancel: () => void
+}
+
+export default function VaccinationForm({ record, onSave, onCancel }: Props) {
+  const [form, setForm] = useState({
+    pig: record?.pig?.toString() || '',
+    vaccine: record?.vaccine?.toString() || '',
+    application_date: record?.application_date || '',
+    dose_ml: record?.dose_ml?.toString() || '',
+    applied_by: record?.applied_by || '',
+    next_due_date: record?.next_due_date || '',
+    notes: record?.notes || '',
+  })
   const [vaccines, setVaccines] = useState<any[]>([])
+  const [pigList, setPigList] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { health.vaccines.list().then((r) => setVaccines(r.data.results || r.data)) }, [])
+  useEffect(() => {
+    health.vaccines.list().then((r) => setVaccines(r.data.results || r.data))
+    pigs.list({ status: 'active', page_size: 100 }).then((r) => setPigList(r.data.results || r.data))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,8 +46,11 @@ export default function VaccinationForm({ onSave, onCancel }: { onSave: () => vo
     <form onSubmit={handleSubmit}>
       <div className="form-row">
         <div className="form-group">
-          <label>ID del Cerdo *</label>
-          <input type="number" value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required />
+          <label>Cerdo *</label>
+          <select value={form.pig} onChange={(e) => setForm({ ...form, pig: e.target.value })} required>
+            <option value="">Seleccionar...</option>
+            {pigList.map((p: any) => <option key={p.id} value={p.id}>{p.ear_tag} - {p.name || 'Sin nombre'}</option>)}
+          </select>
         </div>
         <div className="form-group">
           <label>Vacuna *</label>

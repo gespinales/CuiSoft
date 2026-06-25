@@ -13,6 +13,7 @@ export default function PigForm({ pig, onSave, onCancel }: PigFormProps) {
     name: '',
     sex: 'female',
     category: 'sow',
+    sow_status: '',
     breed: '',
     location: '',
     birth_date: '',
@@ -36,6 +37,7 @@ export default function PigForm({ pig, onSave, onCancel }: PigFormProps) {
         name: pig.name || '',
         sex: pig.sex || 'female',
         category: pig.category || 'sow',
+        sow_status: pig.sow_status || '',
         breed: pig.breed?.toString() || '',
         location: pig.location?.toString() || '',
         birth_date: pig.birth_date || '',
@@ -111,6 +113,20 @@ export default function PigForm({ pig, onSave, onCancel }: PigFormProps) {
           </select>
         </div>
       </div>
+
+      {form.category === 'sow' && (
+        <div className="form-row">
+          <div className="form-group">
+            <label>Estado reproductivo</label>
+            <select name="sow_status" value={form.sow_status} onChange={handleChange}>
+              <option value="">Seleccionar...</option>
+              <option value="empty">Vacía</option>
+              <option value="gestating">Gestante</option>
+              <option value="lactating">Lactante</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className="form-row">
         <div className="form-group">
